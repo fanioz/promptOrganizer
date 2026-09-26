@@ -1,0 +1,30 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+MSBuild_Logs/
+
+# Visual Studio cache
+.vs/
+*.user
+*.suo
+
+# Test & coverage
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# Publish artifacts
+publish/
+artifacts/
+
+# IDE
+.idea/
+*.DotSettings.user
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,84 @@
+<Project>
+  <PropertyGroup>
+    <!-- Global MSBuild properties for the entire solution -->
+    <CoverletOutput>$(MSBuildThisFileDirectory)coverage/</CoverletOutput>
+    <Exclude>[xunit.*]*</Exclude>
+    <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+    <IncludeTestAssembly>false</IncludeTestAssembly>
+    
+    <!-- Coverage Thresholds -->
+    <LineCoverageThreshold>80</LineCoverageThreshold>
+    <BranchCoverageThreshold>75</BranchCoverageThreshold>
+    <MethodCoverageThreshold>80</MethodCoverageThreshold>
+    
+    <!-- Coverage Quality Gates -->
+    <FailBuildOnCoverageBelowThreshold>false</FailBuildOnCoverageBelowThreshold>
+    <CoverageExcludeFromBuild>false</CoverageExcludeFromBuild>
+  </PropertyGroup>
+
+  <!-- Test Configuration -->
+  <PropertyGroup Condition="'$(MSBuildProjectName.Contains(`Test`))' == 'true'">
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <VSTestUseMSBuildOutput>false</VSTestUseMSBuildOutput>
+  </PropertyGroup>
+
+  <!-- Package Configuration -->
+  <PropertyGroup>
+    <Authors>PromptOrganizer Team</Authors>
+    <Company>PromptOrganizer</Company>
+    <Product>PromptOrganizer</Product>
+    <Copyright>Copyright © $(Year) PromptOrganizer</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/your-org/PromptOrganizer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/your-org/PromptOrganizer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- Source Link Configuration -->
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <!-- Code Analysis Configuration -->
+  <PropertyGroup>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <!-- Performance Configuration -->
+  <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RetainVMGarbageCollection>false</RetainVMGarbageCollection>
+  </PropertyGroup>
+
+  <!-- Item Groups for Common Files -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Package References for All Projects -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- Test Project Specific Package References -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="coverlet.msbuild" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="ReportGenerator" Version="5.4.1" />
+  </ItemGroup>
+</Project>

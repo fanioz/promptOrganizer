@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "PromptOrganizer.App",
+  "display": "standalone",
+  "name": "PromptOrganizer.App",
+  "short_name": "PromptOrganizer.App",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff",
+  "scope": "/"
+}

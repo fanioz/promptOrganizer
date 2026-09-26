@@ -1,0 +1,26 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Base surfaces and text -->
+  <SolidColorBrush x:Key="BackgroundBrush" Color="#F7F7F8"/>
+  <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="SurfaceAltBrush" Color="#FAFAFB"/>
+  <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1F2937"/>
+  <SolidColorBrush x:Key="TextSecondaryBrush" Color="#4B5563"/>
+  <SolidColorBrush x:Key="BorderBrush" Color="#EDEEF0"/>
+
+  <!-- Chips and muted surfaces -->
+  <SolidColorBrush x:Key="ChipBackgroundBrush" Color="#EDEEF0"/>
+  <SolidColorBrush x:Key="ChipTextBrush" Color="#4B5563"/>
+
+  <!-- Focus and selection -->
+  <SolidColorBrush x:Key="FocusBrush" Color="#8B5CF6"/>
+  <SolidColorBrush x:Key="SelectionBrush" Color="#EDEEF0"/>
+
+  <!-- Buttons -->
+  <SolidColorBrush x:Key="PrimaryButtonBackgroundBrush" Color="#3B82F6"/>
+  <SolidColorBrush x:Key="PrimaryButtonForegroundBrush" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="SecondaryButtonBackgroundBrush" Color="#EDEEF0"/>
+  <SolidColorBrush x:Key="SecondaryButtonForegroundBrush" Color="#1F2937"/>
+
+</ResourceDictionary>

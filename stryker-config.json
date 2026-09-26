@@ -1,0 +1,109 @@
+{
+  "stryker-config": {
+    "reporters": [
+      "html",
+      "json",
+      "markdown",
+      "progress"
+    ],
+    "log-level": "info",
+    "log-file": true,
+    "timeout-ms": 10000,
+    "timeout-break": false,
+    "project-file": "PromptOrganizer.sln",
+    "max-concurrent-test-runners": 4,
+    "threshold-break": 60,
+    "threshold-high": 80,
+    "threshold-low": 70,
+    "coverage-analysis": "perTest",
+    "abort-test-on-fail": true,
+    "mutate": [
+      {
+        "match": "*.cs",
+        "excludes": [
+          "**/Migrations/**",
+          "**/Test*/**",
+          "**/*Tests.cs",
+          "**/Program.cs",
+          "**/Startup.cs",
+          "**/GlobalSuppressions.cs"
+        ]
+      }
+    ],
+    "ignore-mutations": [
+      "string",
+      "linq.remove"
+    ],
+    "test-projects": [
+      "PromptOrganizer.Tests/PromptOrganizer.Tests.csproj"
+    ],
+    "test-case-filter": {
+      "exclude": [
+        "Category=Integration",
+        "Category=Performance",
+        "Category=Manual"
+      ]
+    },
+    "dashboard-url": "https://dashboard.stryker-mutator.io",
+    "dashboard-api-key": "",
+    "project-name": "PromptOrganizer",
+    "project-version": "main",
+    "since": {
+      "enabled": true,
+      "target": "main"
+    },
+    "diff": {
+      "enabled": true,
+      "target": "main"
+    },
+    "baseline": {
+      "enabled": true,
+      "storage-location": "disk"
+    },
+    "language-version": "latest",
+    "concurrency": 4,
+    "disable-bail": false,
+    "disable-mix-mutants": false,
+    "fallback-version": "main",
+    "force-rebuild": false,
+    "ignore-methods": [
+      "*ToString",
+      "*Equals",
+      "*GetHashCode",
+      "*.ConfigureAwait",
+      "*.ConfigureAwait*",
+      "*.WithCancellation",
+      "*.WithCancellation*"
+    ],
+    "initialization-timeout-ms": 60000,
+    "keep-alive-failed-testruns": false,
+    "mutate-test-cases": false,
+    "mutation-level": "Standard",
+    "optimizations": true,
+    "project-info": {
+      "name": "PromptOrganizer",
+      "module": "Core",
+      "version": "1.0.0",
+      "reason": "Automated mutation testing"
+    },
+    "reporter-options": {
+      "html": {
+        "title": "PromptOrganizer Mutation Testing Report",
+        "file-name": "mutation-report.html"
+      },
+      "json": {
+        "file-name": "mutation-report.json"
+      },
+      "markdown": {
+        "file-name": "mutation-report.md"
+      }
+    },
+    "rollback-test-failures": true,
+    "solution": "PromptOrganizer.sln",
+    "target-framework": "net10.0",
+    "test-runner": "dotnettest",
+    "test-runner-args": "--configuration Release --no-build",
+    "verbosity": "info",
+    "with-baseline": true
+  }
+}

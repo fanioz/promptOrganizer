@@ -1,0 +1,345 @@
+﻿<Page x:Class="PromptOrganizer.App.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:PromptOrganizer.App"
+      xmlns:controls="using:PromptOrganizer.App.Controls"
+      Background="{ThemeResource BackgroundBrush}">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="56"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0"
+          Padding="24,0"
+          Background="{ThemeResource SurfaceBrush}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <Button x:Name="SidebarToggle"
+                Style="{StaticResource SecondaryButtonStyle}"
+                Click="OnSidebarToggleClick">
+          <SymbolIcon Symbol="GlobalNavigationButton"/>
+        </Button>
+        <TextBlock Text="Prompt Organizer"
+                   Style="{StaticResource TopBarTitleTextStyle}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+      <StackPanel Grid.Column="1"
+                  Orientation="Horizontal"
+                  Spacing="8"
+                  Margin="12,0"
+                  VerticalAlignment="Center">
+        <ToggleButton x:Name="TrashToggle"
+                      Content="Trash"
+                      Click="OnTrashToggleClick"
+                      Style="{StaticResource SecondaryButtonStyle}"/>
+        <Button x:Name="NewPromptButton"
+                Style="{StaticResource AccentButtonStyle}"
+                Click="OnNewPromptClick"
+                ToolTipService.ToolTip="New Prompt (Ctrl+N)">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <SymbolIcon Symbol="Add"/>
+            <TextBlock Text="New Prompt"/>
+          </StackPanel>
+        </Button>
+      </StackPanel>
+      <TextBox Grid.Column="2"
+               PlaceholderText="Search prompts… (Ctrl+K)"
+               Style="{StaticResource SearchTextBoxStyle}"
+               Margin="12,0"
+               VerticalAlignment="Center"/>
+      <Button Grid.Column="3"
+              Content="⚙"
+              Style="{StaticResource SecondaryButtonStyle}"
+              Margin="12,0"
+              VerticalAlignment="Center"/>
+      <Button x:Name="ToastAnchor"
+              Visibility="Collapsed">
+        <FlyoutBase.AttachedFlyout>
+          <Flyout Placement="Bottom"
+                  x:Name="CopyToast">
+            <Border Background="{ThemeResource SurfaceAltBrush}"
+                    BorderBrush="{ThemeResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10,8">
+              <TextBlock Text="Copied to clipboard"
+                         Foreground="{ThemeResource TextPrimaryBrush}"
+                         FontFamily="{StaticResource UIFontFamily}"
+                         FontSize="{StaticResource FontSize14}"/>
+            </Border>
+          </Flyout>
+        </FlyoutBase.AttachedFlyout>
+      </Button>
+    </Grid>
+
+    <SplitView x:Name="MainSplitView"
+               Grid.Row="1"
+               DisplayMode="Inline"
+               IsPaneOpen="True"
+               OpenPaneLength="250"
+               PaneBackground="{ThemeResource SurfaceBrush}">
+      <SplitView.Pane>
+        <Grid Padding="12,24,12,12">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <TextBlock Text="PROJECTS"
+                     Foreground="{ThemeResource TextSecondaryBrush}"
+                     FontSize="{StaticResource FontSize12}"
+                     FontWeight="SemiBold"
+                     Margin="12,0,0,12"/>
+          
+          <ListView Grid.Row="1" SelectionMode="Single">
+            <ListView.ItemContainerStyle>
+              <Style TargetType="ListViewItem">
+                <Setter Property="MinHeight" Value="40"/>
+                <Setter Property="Padding" Value="12,0"/>
+                <Setter Property="CornerRadius" Value="4"/>
+              </Style>
+            </ListView.ItemContainerStyle>
+            <ListViewItem>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <SymbolIcon Symbol="Folder" Foreground="{ThemeResource AccentBlueBrush}"/>
+                <TextBlock Text="All Prompts"/>
+              </StackPanel>
+            </ListViewItem>
+            <ListViewItem>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <SymbolIcon Symbol="Folder" Foreground="{ThemeResource AccentVioletBrush}"/>
+                <TextBlock Text="Creative Writing"/>
+              </StackPanel>
+            </ListViewItem>
+            <ListViewItem>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <SymbolIcon Symbol="Folder" Foreground="{ThemeResource AccentGreenBrush}"/>
+                <TextBlock Text="Coding Assistants"/>
+              </StackPanel>
+            </ListViewItem>
+          </ListView>
+        </Grid>
+      </SplitView.Pane>
+
+      <SplitView x:Name="RightSplitView"
+                 PanePlacement="Right"
+                 DisplayMode="Overlay"
+                 IsPaneOpen="False"
+                 OpenPaneLength="300"
+                 PaneBackground="{ThemeResource SurfaceBrush}">
+        <SplitView.Pane>
+          <Grid Padding="24">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Spacing="4">
+              <TextBlock Text="Details &amp; History"
+                         FontFamily="{StaticResource UIFontFamily}"
+                         FontSize="{StaticResource FontSize20}"
+                         FontWeight="SemiBold"/>
+              <TextBlock x:Name="DetailTitle"
+                         Text="Prompt Title"
+                         Foreground="{ThemeResource TextSecondaryBrush}"/>
+            </StackPanel>
+            
+            <ListView Grid.Row="1" Margin="0,24,0,0">
+              <ListView.Header>
+                <TextBlock Text="Revision History"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,12"/>
+              </ListView.Header>
+              <ListViewItem>
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Version 3 (Current)" FontWeight="SemiBold"/>
+                  <TextBlock Text="Updated 2 mins ago" FontSize="{StaticResource FontSize12}" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                </StackPanel>
+              </ListViewItem>
+              <ListViewItem>
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Version 2"/>
+                  <TextBlock Text="Updated yesterday" FontSize="{StaticResource FontSize12}" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                </StackPanel>
+              </ListViewItem>
+              <ListViewItem>
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Version 1"/>
+                  <TextBlock Text="Created 2 days ago" FontSize="{StaticResource FontSize12}" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                </StackPanel>
+              </ListViewItem>
+            </ListView>
+          </Grid>
+        </SplitView.Pane>
+
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+
+          <!-- Column 1: Ide Awal (Sage Green) -->
+          <Grid Grid.Column="0" Background="{StaticResource ColumnBackgroundSageBrush}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="56"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Padding="24,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="Ide Awal"
+                         FontFamily="{StaticResource UIFontFamily}"
+                         FontSize="{StaticResource FontSize16}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center"/>
+              <Button Grid.Column="1"
+                      Content="+ Add"
+                      Style="{StaticResource SecondaryButtonStyle}"
+                      VerticalAlignment="Center"
+                      Click="OnNewPromptClick"/>
+            </Grid>
+            <ScrollViewer Grid.Row="1" Padding="24,0,24,24">
+              <ItemsControl ItemsSource="{x:Bind InitialIdeas}">
+                <ItemsControl.ItemContainerTransitions>
+                  <TransitionCollection>
+                    <RepositionThemeTransition/>
+                    <AddDeleteThemeTransition/>
+                  </TransitionCollection>
+                </ItemsControl.ItemContainerTransitions>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PromptCardControl Title="{Binding Title}"
+                                                Icon="💡"
+                                                BodyPreview="{Binding Content}"
+                                                LabelBrush="{ThemeResource AccentGreenBrush}"
+                                                Tags="{Binding Tags}"
+                                                IsFavorite="{Binding IsFavorite}"
+                                                VersionCount="{Binding VersionCount}"
+                                                Margin="0,0,0,16"
+                                                CopyRequested="OnCardCopyRequested"
+                                            HistoryRequested="OnCardHistoryRequested"
+                                                EditRequested="OnCardEditRequested"
+                                                FavoriteToggled="OnCardFavoriteToggled"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+
+          <!-- Column 2: Dikembangkan (Warm Beige) -->
+          <Grid Grid.Column="1" Background="{StaticResource ColumnBackgroundBeigeBrush}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="56"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Padding="24,0">
+              <TextBlock Text="Dikembangkan"
+                         FontFamily="{StaticResource UIFontFamily}"
+                         FontSize="{StaticResource FontSize16}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center"/>
+            </Grid>
+            <ScrollViewer Grid.Row="1" Padding="24,0,24,24">
+              <ItemsControl ItemsSource="{x:Bind InDevelopment}">
+                <ItemsControl.ItemContainerTransitions>
+                  <TransitionCollection>
+                    <RepositionThemeTransition/>
+                    <AddDeleteThemeTransition/>
+                  </TransitionCollection>
+                </ItemsControl.ItemContainerTransitions>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PromptCardControl Title="{Binding Title}"
+                                                Icon="🔨"
+                                                BodyPreview="{Binding Content}"
+                                                LabelBrush="{ThemeResource AccentYellowBrush}"
+                                                Tags="{Binding Tags}"
+                                                IsFavorite="{Binding IsFavorite}"
+                                                VersionCount="{Binding VersionCount}"
+                                                Margin="0,0,0,16"
+                                                CopyRequested="OnCardCopyRequested"
+                                            HistoryRequested="OnCardHistoryRequested"
+                                                EditRequested="OnCardEditRequested"
+                                                FavoriteToggled="OnCardFavoriteToggled"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+
+          <!-- Column 3: Siap Digunakan (Dusty Blue) -->
+          <Grid Grid.Column="2" Background="{StaticResource ColumnBackgroundBlueBrush}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="56"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Padding="24,0">
+              <TextBlock Text="Siap Digunakan"
+                         FontFamily="{StaticResource UIFontFamily}"
+                         FontSize="{StaticResource FontSize16}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center"/>
+            </Grid>
+            <ScrollViewer Grid.Row="1" Padding="24,0,24,24">
+              <ItemsControl ItemsSource="{x:Bind ReadyToUse}">
+                <ItemsControl.ItemContainerTransitions>
+                  <TransitionCollection>
+                    <RepositionThemeTransition/>
+                    <AddDeleteThemeTransition/>
+                  </TransitionCollection>
+                </ItemsControl.ItemContainerTransitions>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PromptCardControl Title="{Binding Title}"
+                                                Icon="🚀"
+                                                BodyPreview="{Binding Content}"
+                                                LabelBrush="{ThemeResource AccentBlueBrush}"
+                                                Tags="{Binding Tags}"
+                                                IsFavorite="{Binding IsFavorite}"
+                                                VersionCount="{Binding VersionCount}"
+                                                Margin="0,0,0,16"
+                                                CopyRequested="OnCardCopyRequested"
+                                            HistoryRequested="OnCardHistoryRequested"
+                                                EditRequested="OnCardEditRequested"
+                                                FavoriteToggled="OnCardFavoriteToggled"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Grid>
+      </SplitView>
+    </SplitView>
+    <controls:SearchOverlayControl x:Name="SearchOverlay" Grid.RowSpan="2"/>
+    <controls:PromptEditorModal x:Name="EditorModal" Grid.RowSpan="2"/>
+    
+    <TeachingTip x:Name="UndoTip"
+                 Title="Prompt deleted"
+                 Subtitle="You can undo this action."
+                 PreferredPlacement="Bottom"
+                 PlacementMargin="20"
+                 IsLightDismissEnabled="False"
+                 CloseButtonContent="Dismiss">
+        <TeachingTip.ActionButtonContent>
+            <Button Content="Undo" Click="UndoButton_Click"/>
+        </TeachingTip.ActionButtonContent>
+    </TeachingTip>
+  </Grid>
+  <Page.KeyboardAccelerators>
+    <KeyboardAccelerator Key="K"
+                         Modifiers="Control"
+                         Invoked="OnGlobalSearch"/>
+    <KeyboardAccelerator Key="N"
+                         Modifiers="Control"
+                         Invoked="OnNewPromptKeyboard"/>
+    <KeyboardAccelerator Key="Escape"
+                         Invoked="OnGlobalEscape"/>
+  </Page.KeyboardAccelerators>
+</Page>

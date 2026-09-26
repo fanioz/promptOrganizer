@@ -1,0 +1,398 @@
+name: Test and Coverage Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  COVERAGE_THRESHOLD_LINE: 80
+  COVERAGE_THRESHOLD_BRANCH: 75
+  COVERAGE_THRESHOLD_METHOD: 80
+
+jobs:
+  test:
+    name: Test and Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better coverage analysis
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build solution
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Run tests with coverage
+      run: |
+        dotnet test --no-build --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory:./coverage \
+          --logger:"trx;LogFileName=test-results.trx" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[xunit.*]*" \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute="Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute" \
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/**"
+
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate coverage report
+      run: |
+        reportgenerator \
+          -reports:./coverage/**/coverage.cobertura.xml \
+          -targetdir:./coverage/report \
+          -reporttypes:HtmlInline_AzurePipelines;Cobertura;JsonSummary \
+          -sourcedirs:./src \
+          -historydir:./coverage/history \
+          -plugins:RiskHotspots \
+          -assemblyfilters:"+PromptOrganizer.*" \
+          -classfilters:"-PromptOrganizer.Tests.*" \
+          -filefilters:"-*/Migrations/*"
+
+    - name: Generate coverage summary
+      run: |
+        reportgenerator \
+          -reports:./coverage/**/coverage.cobertura.xml \
+          -targetdir:./coverage/summary \
+          -reporttypes:TextSummary;JsonSummary \
+          -assemblyfilters:"+PromptOrganizer.*"
+
+    - name: Parse coverage results
+      id: coverage
+      shell: pwsh
+      run: |
+        [xml]$coverage = Get-Content ./coverage/report/Cobertura.xml
+        $lineRate = [math]::Round([double]$coverage.coverage.'line-rate' * 100, 2)
+        $branchRate = [math]::Round([double]$coverage.coverage.'branch-rate' * 100, 2)
+        $methodRate = [math]::Round([double]$coverage.coverage.'method-rate' * 100, 2)
+        
+        Write-Host "Line Coverage: $lineRate%"
+        Write-Host "Branch Coverage: $branchRate%"
+        Write-Host "Method Coverage: $methodRate%"
+        
+        echo "line_coverage=$lineRate" >> $env:GITHUB_OUTPUT
+        echo "branch_coverage=$branchRate" >> $env:GITHUB_OUTPUT
+        echo "method_coverage=$methodRate" >> $env:GITHUB_OUTPUT
+        
+        # Check thresholds
+        $failures = @()
+        if ($lineRate -lt ${{ env.COVERAGE_THRESHOLD_LINE }}) { $failures += "Line coverage ($lineRate%) below threshold (${{ env.COVERAGE_THRESHOLD_LINE }}%)" }
+        if ($branchRate -lt ${{ env.COVERAGE_THRESHOLD_BRANCH }}) { $failures += "Branch coverage ($branchRate%) below threshold (${{ env.COVERAGE_THRESHOLD_BRANCH }}%)" }
+        if ($methodRate -lt ${{ env.COVERAGE_THRESHOLD_METHOD }}) { $failures += "Method coverage ($methodRate%) below threshold (${{ env.COVERAGE_THRESHOLD_METHOD }}%)" }
+        
+        if ($failures.Count -gt 0) {
+          Write-Host "::error::Coverage thresholds not met:"
+          $failures | ForEach-Object { Write-Host "::error::$_" }
+          exit 1
+        }
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          ./coverage/
+          ./TestResults/
+        retention-days: 30
+
+    - name: Comment PR with coverage
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const lineCoverage = '${{ steps.coverage.outputs.line_coverage }}';
+          const branchCoverage = '${{ steps.coverage.outputs.branch_coverage }}';
+          const methodCoverage = '${{ steps.coverage.outputs.method_coverage }}';
+          
+          const lineThreshold = ${{ env.COVERAGE_THRESHOLD_LINE }};
+          const branchThreshold = ${{ env.COVERAGE_THRESHOLD_BRANCH }};
+          const methodThreshold = ${{ env.COVERAGE_THRESHOLD_METHOD }};
+          
+          const lineStatus = parseFloat(lineCoverage) >= lineThreshold ? '✅' : '❌';
+          const branchStatus = parseFloat(branchCoverage) >= branchThreshold ? '✅' : '❌';
+          const methodStatus = parseFloat(methodCoverage) >= methodThreshold ? '✅' : '❌';
+          
+          const body = `## 📊 Test Coverage Report
+          
+          | Metric | Coverage | Threshold | Status |
+          |--------|----------|-----------|--------|
+          | Line Coverage | ${lineCoverage}% | ${lineThreshold}% | ${lineStatus} |
+          | Branch Coverage | ${branchCoverage}% | ${branchThreshold}% | ${branchStatus} |
+          | Method Coverage | ${methodCoverage}% | ${methodThreshold}% | ${methodStatus} |
+          
+          ### 📈 Coverage Details
+          - **Full Report**: [View HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - **Coverage Artifacts**: [Download Coverage Data](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          ### 🎯 Quality Gates
+          ${parseFloat(lineCoverage) >= lineThreshold && parseFloat(branchCoverage) >= branchThreshold && parseFloat(methodCoverage) >= methodThreshold ? '✅ All coverage thresholds met!' : '⚠️ Some coverage thresholds not met. Please review and add tests as needed.'}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+    - name: Upload coverage to Codecov
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/report/Cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build solution
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Install BenchmarkDotNet
+      run: dotnet tool install -g BenchmarkDotNet.Tool
+
+    - name: Run performance tests
+      run: |
+        dotnet test --filter Category=Performance --configuration Release \
+          --logger:"trx;LogFileName=perf-results.trx" \
+          --results-directory:./perf-results
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-results
+        path: ./perf-results/
+        retention-days: 30
+
+  mutation-tests:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Install Stryker.NET
+      run: dotnet tool install -g dotnet-stryker
+
+    - name: Run mutation tests
+      run: |
+        dotnet stryker \
+          --config-file stryker-config.json \
+          --output ./mutation-results \
+          --reporters html,json,markdown
+
+    - name: Upload mutation results
+      uses: actions/upload-artifact@v4
+      with:
+        name: mutation-results
+        path: ./mutation-results/
+        retention-days: 30
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Install Security Code Scan
+      run: dotnet tool install -g security-scan
+
+    - name: Run security scan
+      run: |
+        security-scan ./src \
+          --output ./security-results \
+          --format sarif
+
+    - name: Upload security results
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-results
+        path: ./security-results/
+        retention-days: 30
+
+  coverage-trend:
+    name: Coverage Trend Analysis
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download current coverage
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        path: ./current-coverage
+
+    - name: Download baseline coverage
+      run: |
+        # Download coverage from main branch
+        gh run download --repo ${{ github.repository }} \
+          --name test-results \
+          --dir ./baseline-coverage \
+          --pattern "coverage.cobertura.xml" \
+          || echo "No baseline coverage found"
+
+    - name: Compare coverage trends
+      shell: pwsh
+      run: |
+        if (Test-Path "./baseline-coverage/coverage.cobertura.xml") {
+          [xml]$baseline = Get-Content "./baseline-coverage/coverage.cobertura.xml"
+          [xml]$current = Get-Content "./current-coverage/coverage/coverage.cobertura.xml"
+          
+          $baselineLineRate = [math]::Round([double]$baseline.coverage.'line-rate' * 100, 2)
+          $currentLineRate = [math]::Round([double]$current.coverage.'line-rate' * 100, 2)
+          
+          $change = $currentLineRate - $baselineLineRate
+          
+          Write-Host "Coverage Trend Analysis:"
+          Write-Host "Baseline Line Coverage: $baselineLineRate%"
+          Write-Host "Current Line Coverage: $currentLineRate%"
+          Write-Host "Change: $change%"
+          
+          if ($change -lt -5) {
+            Write-Host "::warning::Coverage decreased significantly ($change%)"
+          } elseif ($change -gt 5) {
+            Write-Host "::notice::Coverage improved significantly (+$change%)"
+          }
+        } else {
+          Write-Host "No baseline coverage available for comparison"
+        }
+
+  publish-reports:
+    name: Publish Reports
+    runs-on: ubuntu-latest
+    needs: [test, performance-tests, mutation-tests, security-scan]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./all-reports
+
+    - name: Create consolidated report
+      run: |
+        mkdir -p ./consolidated-report
+        cp -r ./all-reports/* ./consolidated-report/ || true
+        
+        # Create index.html
+        cat > ./consolidated-report/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>PromptOrganizer Test Reports</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .report-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+                .report-link { display: block; margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>PromptOrganizer Test Reports</h1>
+            
+            <div class="report-section">
+                <h2>Test Coverage</h2>
+                <a href="test-results/coverage/report/index.html" class="report-link">Coverage Report</a>
+                <a href="test-results/coverage/summary/Summary.txt" class="report-link">Coverage Summary</a>
+            </div>
+            
+            <div class="report-section">
+                <h2>Performance Tests</h2>
+                <a href="performance-results/perf-results.trx" class="report-link">Performance Results</a>
+            </div>
+            
+            <div class="report-section">
+                <h2>Mutation Tests</h2>
+                <a href="mutation-results/mutation-report.html" class="report-link">Mutation Report</a>
+            </div>
+            
+            <div class="report-section">
+                <h2>Security Scan</h2>
+                <a href="security-results/security-scan.sarif" class="report-link">Security Results</a>
+            </div>
+        </body>
+        </html>
+        EOF
+
+    - name: Upload consolidated reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: consolidated-reports
+        path: ./consolidated-report/
+        retention-days: 90
+
+    - name: Deploy to GitHub Pages
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./consolidated-report
+        destination_dir: test-reports

@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Code Coverage Configuration -->
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>cobertura,opencover,json</CoverletOutputFormat>
+    <CoverletOutput>./coverage/</CoverletOutput>
+    <Exclude>[xunit.*]*</Exclude>
+    <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+    <IncludeTestAssembly>false</IncludeTestAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiteDB" Version="5.0.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PromptOrganizer.Domain\PromptOrganizer.Domain.csproj" />
+    <ProjectReference Include="..\PromptOrganizer.Data\PromptOrganizer.Data.csproj" />
+    <ProjectReference Include="..\PromptOrganizer.Services\PromptOrganizer.Services.csproj" />
+  </ItemGroup>
+
+</Project>
