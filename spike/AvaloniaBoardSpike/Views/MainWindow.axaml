@@ -1,0 +1,229 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="clr-namespace:AvaloniaBoardSpike"
+        xmlns:views="clr-namespace:AvaloniaBoardSpike.Views"
+        x:Class="AvaloniaBoardSpike.Views.MainWindow"
+        x:CompileBindings="True"
+        x:DataType="views:MainWindow"
+        Title="Prompt Organizer — AVALONIA SPIKE (prototype)"
+        Width="1280" Height="820"
+        FontFamily="{StaticResource UIFontFamily}"
+        Background="{DynamicResource BackgroundBrush}">
+
+  <!-- PROTOTYPE (ticket #4): throwaway Avalonia spike of the board screen.
+       Mirrors the Uno MainPage.xaml layout: top bar + three tinted columns of prompt cards. -->
+
+  <Window.Styles>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackgroundBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForegroundBrush}" />
+      <Setter Property="CornerRadius" Value="{StaticResource ButtonCornerRadius}" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="Padding" Value="14,0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.2,0,0,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.primary:pointerover">
+      <Setter Property="Background" Value="{DynamicResource PrimaryButtonHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.secondary">
+      <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackgroundBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForegroundBrush}" />
+      <Setter Property="CornerRadius" Value="{StaticResource ButtonCornerRadius}" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.2,0,0,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.secondary:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ChipBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Button.tertiary">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBox.search">
+      <Setter Property="CornerRadius" Value="{StaticResource ButtonCornerRadius}" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Border#Backdrop">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.22" Easing="0.2,0,0,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+
+    <Style Selector="Border#ModalPanel">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.24" Easing="0.15,0.85,0.35,1" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="0.15,0.85,0.35,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+  </Window.Styles>
+
+  <Panel>
+    <Grid RowDefinitions="56,*">
+      <!-- Top bar (56px, spec) -->
+      <Border Background="{DynamicResource SurfaceBrush}">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="24,0">
+          <TextBlock Text="Prompt Organizer"
+                     FontSize="20" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     VerticalAlignment="Center" />
+          <TextBox Grid.Column="2" Classes="search"
+                   Width="360"
+                   Watermark="Search prompts… (Ctrl+K)"
+                   VerticalAlignment="Center" />
+          <Button Grid.Column="3" Classes="secondary" Content="🌗"
+                  ToolTip.Tip="Toggle light/dark"
+                  Click="OnThemeToggle" Margin="12,0,0,0"
+                  VerticalAlignment="Center" />
+          <Button Grid.Column="4" Classes="primary" Click="OnNewPrompt" Margin="12,0,0,0"
+                  VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="＋" />
+              <TextBlock Text="New Prompt" />
+            </StackPanel>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- Board: horizontal scroll, three tinted columns (340px, spec) -->
+      <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Horizontal" Spacing="24" Margin="24">
+          <Border Width="340" Background="{DynamicResource ColumnSageBrush}" CornerRadius="8">
+            <Grid RowDefinitions="56,*">
+              <Grid Margin="16,0">
+                <TextBlock Text="Ide Awal" FontSize="16" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                <Button Classes="secondary" Content="+ Add" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+              <ScrollViewer Grid.Row="1" Padding="12,0,12,16">
+                <ItemsControl ItemsSource="{Binding IdeAwal.Cards}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="16" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="m:PromptCardModel">
+                      <views:PromptCard />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+          </Border>
+
+          <Border Width="340" Background="{DynamicResource ColumnBeigeBrush}" CornerRadius="8">
+            <Grid RowDefinitions="56,*">
+              <Grid Margin="16,0">
+                <TextBlock Text="Dikembangkan" FontSize="16" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                <Button Classes="secondary" Content="+ Add" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+              <ScrollViewer Grid.Row="1" Padding="12,0,12,16">
+                <ItemsControl ItemsSource="{Binding Dikembangkan.Cards}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="16" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="m:PromptCardModel">
+                      <views:PromptCard />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+          </Border>
+
+          <Border Width="340" Background="{DynamicResource ColumnBlueBrush}" CornerRadius="8">
+            <Grid RowDefinitions="56,*">
+              <Grid Margin="16,0">
+                <TextBlock Text="Siap Digunakan" FontSize="16" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                <Button Classes="secondary" Content="+ Add" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+              <ScrollViewer Grid.Row="1" Padding="12,0,12,16">
+                <ItemsControl ItemsSource="{Binding SiapDigunakan.Cards}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="16" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="m:PromptCardModel">
+                      <views:PromptCard />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+
+    <!-- Editor modal overlay (spec: max 960px, radius 12, scale 0.98→1.0 + fade in 240ms) -->
+    <Grid x:Name="ModalRoot" IsVisible="False">
+      <Border x:Name="Backdrop" Background="#000000" Opacity="0"
+              PointerPressed="OnBackdropPointerPressed" />
+      <Border x:Name="ModalPanel"
+              HorizontalAlignment="Center" VerticalAlignment="Center"
+              Width="920" MaxHeight="760"
+              Background="{DynamicResource SurfaceBrush}"
+              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+              CornerRadius="{StaticResource ModalCornerRadius}"
+              BoxShadow="0 8 16 0 #24000000"
+              Opacity="0" RenderTransform="scale(0.98)">
+        <Grid RowDefinitions="Auto,*,Auto" Margin="24" MinHeight="420">
+          <StackPanel Spacing="12">
+            <TextBlock x:Name="EditorHeading" Text="Edit Prompt"
+                       FontSize="20" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBox x:Name="EditorTitle" Watermark="Prompt title" FontSize="16" CornerRadius="6" />
+            <TextBox x:Name="EditorTags" Watermark="tags, comma separated" FontSize="14" CornerRadius="6" />
+          </StackPanel>
+          <TextBox Grid.Row="1" x:Name="EditorBody"
+                   Watermark="Prompt body (markdown)…"
+                   FontFamily="{StaticResource MonoFontFamily}" FontSize="14"
+                   AcceptsReturn="True" TextWrapping="Wrap"
+                   CornerRadius="6" Margin="0,12,0,0" />
+          <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Classes="tertiary" Content="Export" />
+            <Button Classes="secondary" Content="Copy" Click="OnCopyBodyClick" />
+            <Button Classes="primary" Content="Save" Click="OnSaveClick" />
+            <TextBlock Text="PROTOTYPE — nothing persists"
+                       FontSize="12" Opacity="0.6"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       VerticalAlignment="Center" Margin="8,0,0,0" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Panel>
+</Window>

@@ -1,0 +1,19 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:AvaloniaBoardSpike"
+             x:Class="AvaloniaBoardSpike.App"
+             RequestedThemeVariant="Light">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://AvaloniaBoardSpike/Themes/Brushes.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <conv:HexToBrushConverter x:Key="HexToBrush" />
+      <conv:BoolToFavoriteGlyphConverter x:Key="FavGlyph" />
+      <conv:BoolToFavoriteBrushConverter x:Key="FavBrush" />
+    </ResourceDictionary>
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme />
+  </Application.Styles>
+</Application>

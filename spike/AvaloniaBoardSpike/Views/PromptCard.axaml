@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:m="clr-namespace:AvaloniaBoardSpike"
+             x:Class="AvaloniaBoardSpike.Views.PromptCard"
+             x:DataType="m:PromptCardModel">
+
+  <!-- PROTOTYPE (ticket #4): throwaway Avalonia counterpart of the Uno PromptCardControl.
+       The hover/press behavior below uses declarative Styles + Transitions — the direct
+       comparison point against the Uno card's ~160 lines of VisualStateManager storyboards. -->
+
+  <UserControl.Styles>
+    <!-- Hover shadow: separate layer behind the card, faded via opacity transition (1dp → 2dp, 140ms) -->
+    <Style Selector="Border#HoverShadow">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.14" Easing="0.2,0,0,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="UserControl.hover Border#HoverShadow">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- Card surface: background tint + press scale, 140ms / 80ms -->
+    <Style Selector="Border#CardRoot">
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.14" Easing="0.2,0,0,1" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" Easing="0.2,0,0,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border#CardRoot:pointerover">
+      <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+    </Style>
+    <Style Selector="UserControl.hover Border#CardRoot">
+      <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+    </Style>
+    <Style Selector="UserControl.pressed Border#CardRoot">
+      <Setter Property="RenderTransform" Value="scale(0.98)" />
+    </Style>
+
+    <!-- Quick actions fade-in, 120ms (spec: hover fade) -->
+    <Style Selector="StackPanel#CardActions">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.12" Easing="0.2,0,0,1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="UserControl.hover StackPanel#CardActions">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- 32px-hit-target icon buttons -->
+    <Style Selector="Button.iconBtn">
+      <Setter Property="MinWidth" Value="28" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="{StaticResource ButtonCornerRadius}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.iconBtn:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ChipBackgroundBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Panel>
+    <Border x:Name="HoverShadow"
+            BoxShadow="0 3 8 0 #1A000000"
+            CornerRadius="{StaticResource CardCornerRadius}"
+            IsHitTestVisible="False" />
+
+    <Border x:Name="CardRoot"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource CardCornerRadius}"
+            BoxShadow="0 1 3 0 #14000000"
+            MinHeight="96">
+      <Grid ColumnDefinitions="4,*">
+        <Border Background="{Binding Accent, Converter={StaticResource HexToBrush}}" />
+        <StackPanel Margin="16,12,12,16" Spacing="8">
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+            <TextBlock Text="{Binding Icon}" FontSize="20" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding Title}"
+                       FontSize="16" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       VerticalAlignment="Center" Margin="8,0,0,0"
+                       MaxLines="1" TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding Title}" />
+            <TextBlock Grid.Column="2"
+                       Text="{Binding Versions, StringFormat='v{0}'}"
+                       FontSize="12" Opacity="0.6"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       VerticalAlignment="Center" />
+            <StackPanel Grid.Column="3" x:Name="CardActions" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0">
+              <Button Classes="iconBtn" ToolTip.Tip="Favorite" Click="OnFavoriteClick">
+                <TextBlock Text="{Binding IsFavorite, Converter={StaticResource FavGlyph}}"
+                           Foreground="{Binding IsFavorite, Converter={StaticResource FavBrush}}"
+                           FontSize="14" />
+              </Button>
+              <Button Classes="iconBtn" ToolTip.Tip="Copy" Click="OnCopyClick">
+                <TextBlock Text="📋" FontSize="13" />
+              </Button>
+              <Button Classes="iconBtn" ToolTip.Tip="Edit" Click="OnEditClick">
+                <TextBlock Text="✏️" FontSize="13" />
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <ItemsControl ItemsSource="{Binding Tags}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <Border Background="{DynamicResource ChipBackgroundBrush}"
+                        CornerRadius="{StaticResource ChipCornerRadius}"
+                        Padding="10,4" Margin="0,0,8,0">
+                  <TextBlock Text="{Binding}" FontSize="12"
+                             Foreground="{DynamicResource ChipTextBrush}" />
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBlock Text="{Binding Body}"
+                     FontSize="14"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     TextWrapping="Wrap"
+                     MaxLines="3"
+                     TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Panel>
+</UserControl>
